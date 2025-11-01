@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>AI Integration Demo</title>
+</head>
+<body>
+    <div class="container">
+        <h1>AI Integration</h1>
+        <form id="aiForm" class="aiForm">
+            <label for="userPrompt">Enter your message</label>
+            <textarea name="userPrompt" id="userP" rows="4" cols="50" placeholder="Ask Me"></textarea>
+            <button type="submit">Send</button>
+        </form>
+        <section class="resp">
+            <h2>Response</h2>
+            <div id="response"></div>
+        </section>
+    </div>
+    <script>
+        const form = document.getElementById('aiForm');
+        const responseDiv = document.getElementById('response');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault(); 
+
+            const userPrompt = document.getElementById('userP').value.trim();
+
+            if (!userPrompt) {
+                responseDiv.innerHTML = '<p style="color:red; text-align:center">Please enter a message in the box above.</p>';
+                return;
+            }
+            // show loading message
+            responseDiv.innerHTML = `
+            <div class="loading-container">
+                <div class="spinner"></div>
+                <div class="loading-text">Processing... Please wait</div>    
+            </div>
+            `;
+
+            try {
+                const res = await fetch('/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({userPrompt}),
+                });
+
+                const data = await res.json();
+                if(data.error) {
+                    responseDiv.innerHTML = `<p style="color:red; text-align:center">${data.error}</p>`;
+                } else if(data.moderated) {
+                    responseDiv.innerHTML = `<p style-"color:orange">Some content was redacted for safety.</p>
+                    <p>${data.response}</p>`;
+                } else {
+                    responseDiv.innerHTML = `<p>${data.response}</p>`;
+                }
+            } catch (err) {
+                responseDiv.innerHTML = `<p style="color:red">Error: ${err.message}</p>`;
+            }
+        });
+    </script>
+</body>
+</html>
